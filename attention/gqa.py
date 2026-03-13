@@ -1,6 +1,10 @@
 # Grouped Query attention
 # We can also group into single KV head for all num_heads which is 
 # known as multi-query attention (MQA).
+
+# num_kv_heads == num_heads. MHA. Full
+# one KV per Q head1 < num_kv_heads < num_heads. GQA. Grouped
+# shared KV headsnum_kv_heads == 1. MQA. One KV head for all queries
 import math
 
 import torch
