@@ -1,190 +1,182 @@
-"""Benchmarks for Chapter 02: The Generation Loop
-
-Compares naive generation vs cached generation to demonstrate
-the O(n^2) vs O(n) complexity difference.
-"""
-
 import json
-import sys
+import os
 import time
-
+import random
 import torch
-
-sys.path.insert(0, '..')
-
-from attention.transformer import TransformerModel
 
 from .cached_generation import CachedTransformerModel, cached_generate
 
 
-def benchmark_naive_generation(
-    model: TransformerModel,
+def synchronize(device: torch.device):
+    if device.type == 'cuda':
+        torch.cuda.synchronize(device)
+    elif device.type == 'mps' and hasattr(torch, 'mps'):
+        torch.mps.synchronize()
+
+
+def get_dtype_for_device(device: torch.device) -> torch.dtype:
+    # Safer default on Apple Silicon unless you benchmark float16 separately.
+    if device.type == 'cuda':
+        return torch.float16
+    if device.type == 'mps':
+        return torch.float32
+    return torch.float32
+
+
+def set_seed(seed: int = 1234):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def naive_generate_same_model(
+    model: CachedTransformerModel,
     input_ids: torch.Tensor,
     max_new_tokens: int,
-    device: str,
-) -> dict:
-    """Benchmark naive generation (recompute everything each step)."""
+    temperature: float = 1.0,
+):
     model.eval()
     generated = input_ids.clone()
-    times = []
+    timings = []
 
     with torch.no_grad():
-        for i in range(max_new_tokens):
-            if device == "cuda":
-                torch.cuda.synchronize()
+        for _ in range(max_new_tokens):
+            synchronize(generated.device)
             start = time.perf_counter()
 
-            logits = model(generated)
-            next_logits = logits[:, -1, :]
+            logits = model(generated, caches=None, start_pos=0)
+            next_logits = logits[:, -1, :] / temperature
             probs = torch.softmax(next_logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)
             generated = torch.cat([generated, next_token], dim=1)
 
-            if device == "cuda":
-                torch.cuda.synchronize()
-            times.append((time.perf_counter() - start) * 1000)
+            synchronize(generated.device)
+            timings.append((time.perf_counter() - start) * 1000)
 
-    return {
-        "times_ms": times,
-        "total_ms": sum(times),
-        "mean_ms": sum(times) / len(times),
-        "first_token_ms": times[0],
-        "last_token_ms": times[-1],
+    return generated, {
+        'times_ms': timings,
+        'total_ms': sum(timings),
+        'mean_ms': sum(timings) / len(timings),
+        'first_token_ms': timings[0],
+        'last_token_ms': timings[-1],
     }
 
 
-def main():
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    dtype = torch.float16 if device == "cuda" else torch.float32
-
-    # Model configuration (same for both)
-    config = {
-        "vocab_size": 1000,
-        "hidden_dim": 512,
-        "num_layers": 8,
-        "num_heads": 8,
-        "num_kv_heads": 2,
-        "intermediate_dim": 1024,
+def benchmark_device(device_name: str, config: dict, prompt_lengths=(10, 50, 100), max_new_tokens: int = 50):
+    device = torch.device(device_name)
+    dtype = get_dtype_for_device(device)
+    device_result = {
+        'device': device_name,
+        'dtype': str(dtype),
+        'benchmarks': [],
     }
 
-    results = {
-        "hardware": torch.cuda.get_device_name() if torch.cuda.is_available() else "CPU",
-        "config": config,
-        "benchmarks": [],
-    }
-
-    print(f"Generation Loop Benchmarks (device={device})")
-    print(f"Model: {config['num_layers']} layers, {config['hidden_dim']} dim")
-    print("=" * 70)
-
-    # Test different prompt lengths
-    prompt_lengths = [10, 50, 100]
-    max_new_tokens = 50
+    print(f"\n=== Device: {device_name} | dtype: {dtype} ===")
 
     for prompt_len in prompt_lengths:
-        print(f"\nPrompt length: {prompt_len}, Generate: {max_new_tokens} tokens")
-        print("-" * 70)
+        print(f"\nPrompt length={prompt_len}, max_new_tokens={max_new_tokens}")
+        set_seed(1234 + prompt_len)
+        input_ids = torch.randint(0, config['vocab_size'], (1, prompt_len), device=device)
 
-        input_ids = torch.randint(0, config["vocab_size"], (1, prompt_len), device=device)
+        # same weights for both methods on the same device
+        set_seed(999)
+        model = CachedTransformerModel(**config).to(device=device, dtype=dtype)
+        model.eval()
 
-        # Naive generation
-        naive_model = TransformerModel(**config).to(device, dtype)
-        naive_model.eval()
-
-        # Warmup
+        # warmup naive
         with torch.no_grad():
-            _ = naive_model(input_ids)
+            _ = model(input_ids, caches=None, start_pos=0)
+        synchronize(device)
 
-        naive_times = benchmark_naive_generation(
-            naive_model, input_ids, max_new_tokens, device
+        # naive
+        _, naive_stats = naive_generate_same_model(model, input_ids, max_new_tokens)
+        print(
+            f"Naive: first={naive_stats['first_token_ms']:.2f} ms | "
+            f"last={naive_stats['last_token_ms']:.2f} ms | "
+            f"total={naive_stats['total_ms']:.2f} ms"
         )
 
-        print("Naive generation:")
-        print(f"  First token: {naive_times['first_token_ms']:.2f} ms")
-        print(f"  Last token:  {naive_times['last_token_ms']:.2f} ms")
-        print(f"  Total:       {naive_times['total_ms']:.2f} ms")
-        print(f"  Slowdown:    {naive_times['last_token_ms'] / naive_times['first_token_ms']:.2f}x")
+        # fresh prompt for cached benchmark
+        set_seed(1234 + prompt_len)
+        input_ids_fresh = torch.randint(0, config['vocab_size'], (1, prompt_len), device=device)
 
-        # Cached generation
-        cached_model = CachedTransformerModel(**config).to(device, dtype)
-        cached_model.eval()
-
-        # Warmup
+        # warmup cached
         with torch.no_grad():
-            warmup_caches = cached_model.create_caches(1, prompt_len + 10, torch.device(device), dtype)
-            _ = cached_model(input_ids, warmup_caches)
+            warmup_caches = model.create_caches(1, prompt_len + 10, device, dtype)
+            _ = model(input_ids_fresh, warmup_caches, start_pos=0)
+        synchronize(device)
 
-        input_ids_fresh = torch.randint(0, config["vocab_size"], (1, prompt_len), device=device)
-        _, cached_times = cached_generate(cached_model, input_ids_fresh, max_new_tokens)
+        _, cached_stats = cached_generate(model, input_ids_fresh, max_new_tokens)
+        decode_avg = sum(cached_stats['decode_ms']) / len(cached_stats['decode_ms'])
+        print(
+            f"Cached: prefill={cached_stats['prefill_ms']:.2f} ms | "
+            f"decode_avg={decode_avg:.2f} ms | total={cached_stats['total_ms']:.2f} ms"
+        )
 
-        decode_times = cached_times["decode_ms"]
-        print("\nCached generation:")
-        print(f"  Prefill:     {cached_times['prefill_ms']:.2f} ms ({prompt_len} tokens)")
-        print(f"  First decode:{decode_times[0]:.2f} ms")
-        print(f"  Last decode: {decode_times[-1]:.2f} ms")
-        print(f"  Decode avg:  {sum(decode_times) / len(decode_times):.2f} ms/token")
-        print(f"  Total:       {cached_times['total_ms']:.2f} ms")
+        speedup = naive_stats['total_ms'] / cached_stats['total_ms']
+        print(f"Speedup: {speedup:.2f}x")
 
-        speedup = naive_times["total_ms"] / cached_times["total_ms"]
-        print(f"\nSpeedup: {speedup:.2f}x")
-
-        results["benchmarks"].append({
-            "prompt_len": prompt_len,
-            "max_new_tokens": max_new_tokens,
-            "naive": naive_times,
-            "cached": {
-                "prefill_ms": cached_times["prefill_ms"],
-                "decode_times_ms": decode_times,
-                "total_ms": cached_times["total_ms"],
-            },
-            "speedup": speedup,
+        device_result['benchmarks'].append({
+            'prompt_len': prompt_len,
+            'max_new_tokens': max_new_tokens,
+            'naive': naive_stats,
+            'cached': cached_stats,
+            'speedup_cached_vs_naive': speedup,
         })
 
-        # Clean up
-        del naive_model, cached_model
-        if device == "cuda":
+        del model
+        if device.type == 'cuda':
             torch.cuda.empty_cache()
 
-    # Key insights
-    print("\n" + "=" * 70)
-    print("\nKey Insights:")
-    print("-" * 70)
-    print("1. Naive generation time INCREASES with sequence length")
-    print("   - Each step recomputes attention for ALL previous tokens")
-    print("   - O(n) per token -> O(n^2) total")
-    print()
-    print("2. Cached generation time is CONSTANT per decode step")
-    print("   - KV cache stores previous K,V values")
-    print("   - Each decode step only processes 1 new token")
-    print("   - O(1) per token -> O(n) total")
-    print()
-    print("3. Prefill vs Decode are fundamentally different:")
-    print("   - Prefill: GEMM (matrix-matrix), compute-bound")
-    print("   - Decode: GEMV (matrix-vector), memory-bound")
+    return device_result
 
-    # Memory analysis
-    print("\n" + "=" * 70)
-    print("\nKV Cache Memory Analysis:")
-    print("-" * 70)
 
-    from .kv_cache import calculate_kv_cache_size
+def compare_devices():
+    config = {
+        'vocab_size': 1000,
+        'hidden_dim': 512,
+        'num_layers': 8,
+        'num_heads': 8,
+        'num_kv_heads': 2,
+        'intermediate_dim': 1024,
+    }
 
-    for name, kv_heads in [("MHA (32 heads)", 32), ("GQA (8 heads)", 8), ("GQA (2 heads)", 2)]:
-        sizes = calculate_kv_cache_size(
-            batch_size=1,
-            max_seq_len=4096,
-            num_layers=config["num_layers"],
-            num_kv_heads=kv_heads,
-            head_dim=config["hidden_dim"] // config["num_heads"],
-        )
-        print(f"{name:20s}: {sizes['total_mb']:.1f} MB for 4096 tokens")
+    available = ['cpu']
+    if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+        available.insert(0, 'mps')
+    if torch.cuda.is_available():
+        available.insert(0, 'cuda')
 
-    # Output JSON
-    print("\n" + "=" * 70)
+    print('Available devices:', available)
+    print('PyTorch version:', torch.__version__)
+
+    results = {
+        'torch_version': torch.__version__,
+        'devices': [],
+        'cross_device_summary': [],
+    }
+
+    for device_name in available:
+        results['devices'].append(benchmark_device(device_name, config))
+
+    by_name = {d['device']: d for d in results['devices']}
+    if 'mps' in by_name and 'cpu' in by_name:
+        mps_b = by_name['mps']['benchmarks']
+        cpu_b = by_name['cpu']['benchmarks']
+        for mps_entry, cpu_entry in zip(mps_b, cpu_b):
+            results['cross_device_summary'].append({
+                'prompt_len': mps_entry['prompt_len'],
+                'max_new_tokens': mps_entry['max_new_tokens'],
+                'naive_cpu_over_mps': cpu_entry['naive']['total_ms'] / mps_entry['naive']['total_ms'],
+                'cached_cpu_over_mps': cpu_entry['cached']['total_ms'] / mps_entry['cached']['total_ms'],
+                'cached_speedup_mps': mps_entry['speedup_cached_vs_naive'],
+                'cached_speedup_cpu': cpu_entry['speedup_cached_vs_naive'],
+            })
+
+    print('\n=== JSON RESULTS ===')
     print(json.dumps(results, indent=2))
 
-    return results
 
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    compare_devices()
