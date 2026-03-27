@@ -16,7 +16,7 @@ uv run python -m kv_cache.benchmark
 
 ### MPS vs CPU comparision in Apple M4 air
 
-<h2>Attention</h3>
+<h3>Attention</h3>
 
 ![alt text](attention/attention_benchmark.png)
 
@@ -34,3 +34,8 @@ uv run python -m kv_cache.benchmark
     </td>
   </tr>
 </table>
+
+<h3>GEMM_GEMV</h3>
+
+GEMM in MPS (fp16) 
+![alt text](gemm_gemv/gemm_bechmark_fp16.png)
