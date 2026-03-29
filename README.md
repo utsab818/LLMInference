@@ -26,11 +26,11 @@ uv run python -m kv_cache.benchmark
   <tr>
     <td align="center">
       <b>With MPS Float32</b><br/>
-      <img src="kv_cache/kv_cache_benchmark.png" alt="KV Cache Benchmark - MPS Float32" width="400"/>
+      <img src="outputs/kv_cache_benchmark.png" alt="KV Cache Benchmark - MPS Float32" width="400"/>
     </td>
     <td align="center">
       <b>With MPS Float16</b><br/>
-      <img src="kv_cache/mps_float16.png" alt="KV Cache Benchmark - MPS Float16" width="400"/>
+      <img src="outputs/mps_float16.png" alt="KV Cache Benchmark - MPS Float16" width="400"/>
     </td>
   </tr>
 </table>
@@ -41,15 +41,15 @@ uv run python -m kv_cache.benchmark
   <tr>
     <td align="center">
       <b>GEMM with MPS Fp16</b><br/>
-      <img src="gemm_gemv/gemm_bechmark_fp16.png" alt="GEMM Benchmark - MPS Fp16" width="400"/>
+      <img src="outputs/gemm_bechmark.png" alt="GEMM Benchmark - MPS Fp16" width="400"/>
     </td>
     <td align="center">
       <b>CPU and MPS (Fp16, fp32)</b><br/>
-      <img src="gemm_gemv/gemm_comparision.png" alt="GEMM Comparision Table" width="400"/>
+      <img src="outputs/gemm_comparision.png" alt="GEMM Comparision Table" width="400"/>
     </td>
     <td align="center">
       <b>GEMV with MPS FP16</b><br/>
-      <img src="gemm_gemv/gemv_benchmark.png" alt="GEMM Comparision Table" width="400"/>
+      <img src="outputs/gemv_benchmark.png" alt="GEMM Comparision Table" width="400"/>
     </td>
   </tr>
 </table>

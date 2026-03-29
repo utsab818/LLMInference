@@ -99,5 +99,6 @@ if __name__ == "__main__":
         for batch, seq, hidden, _ in configs:
             m = batch * seq
             result = benchmark_gemm(m, hidden, hidden)
-            print(f"M={m:6d}, N={hidden}, K={hidden}: "
-                  f"{result.mean_us:8.1f} us, {result.tflops:.2f} TFLOPS")
+            print(f"M={hidden:6d}, K={hidden}: "
+                  f"{result.mean_us:8.1f} us, {result.memory_gbps:.1f} GB/s, "
+                  f"{result.tflops:.4f} TFLOPS")
