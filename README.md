@@ -40,12 +40,17 @@ uv run python -m kv_cache.benchmark
 <table align="center">
   <tr>
     <td align="center">
-      <b>With MPS Fp16</b><br/>
+      <b>GEMM with MPS Fp16</b><br/>
       <img src="gemm_gemv/gemm_bechmark_fp16.png" alt="GEMM Benchmark - MPS Fp16" width="400"/>
     </td>
     <td align="center">
       <b>CPU and MPS (Fp16, fp32)</b><br/>
-      <img src="gemm_gemv/gemm_comparision.png" alt="Comparision Table" width="400"/>
+      <img src="gemm_gemv/gemm_comparision.png" alt="GEMM Comparision Table" width="400"/>
+    </td>
+    <td align="center">
+      <b>GEMV with MPS FP16</b><br/>
+      <img src="gemm_gemv/gemv_benchmark.png" alt="GEMM Comparision Table" width="400"/>
     </td>
   </tr>
 </table>
+
