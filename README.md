@@ -18,7 +18,7 @@ uv run python -m kv_cache.benchmark
 
 <h3>Attention</h3>
 
-![alt text](attention/attention_benchmark.png)
+![alt text](outputs/attention_benchmark.png)
 
 <h3>KV Cache</h3>
 
@@ -41,15 +41,21 @@ uv run python -m kv_cache.benchmark
   <tr>
     <td align="center">
       <b>GEMM with MPS Fp16</b><br/>
-      <img src="outputs/gemm_bechmark.png" alt="GEMM Benchmark - MPS Fp16" width="400"/>
+      <img src="outputs/gemm_benchmark.png" alt="GEMM Benchmark - MPS Fp16" width="400"/>
     </td>
     <td align="center">
       <b>CPU and MPS (Fp16, fp32)</b><br/>
       <img src="outputs/gemm_comparision.png" alt="GEMM Comparision Table" width="400"/>
     </td>
+  </tr>
+  <tr>
     <td align="center">
       <b>GEMV with MPS FP16</b><br/>
-      <img src="outputs/gemv_benchmark.png" alt="GEMM Comparision Table" width="400"/>
+      <img src="outputs/gemv_benchmark.png" alt="GEMV Benchmark - MPS Fp16" width="400"/>
+    </td>
+    <td align="center">
+      <b>CPU and MPS (Fp16, fp32)</b><br/>
+      <img src="outputs/gemv_comparision.png" alt="GEMV Comparision Table" width="400"/>
     </td>
   </tr>
 </table>
