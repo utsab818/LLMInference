@@ -60,3 +60,6 @@ uv run python -m kv_cache.benchmark
   </tr>
 </table>
 
+Roofline
+![alt text](outputs/roofline.png)
+
