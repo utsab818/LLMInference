@@ -38,6 +38,8 @@ M4_AIR_BASE = HardwareSpec(
     name="MacBook Air M4 Base (8-core GPU)",
 )
 
+def arithmetic_intensity(flops: int, bytes_moved: int) -> float:
+    return flops / bytes_moved
 
 def roofline_throughput(ai: float, hw: HardwareSpec) -> float:
     memory_bound_throughput = ai * hw.memory_bandwidth_gbps / 1000
