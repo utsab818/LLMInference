@@ -1,5 +1,12 @@
 # LLM Inference
 
+### Structure
+```
+attention/   Transformer Mechanics (attention, GQA, FFN)
+kv_cache/   The Generation Loop (KV cache, prefill/decode)
+gemm_gemv/   Compute Characteristics (GEMM vs GEMV, roofline)
+```
+
 ### Run the test
 ```
 uv run pytest 
