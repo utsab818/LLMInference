@@ -43,6 +43,8 @@ Each module contains its own README with benchmark plots, observations, and hard
 All results are generated on:
 
 Apple M4 Air (base variant, MPS backend)
+
+and some required ones are generated in Tesla T4 GPU (Google Collab).
 ```
 
 ### Systems & Performance Focus
