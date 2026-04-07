@@ -8,9 +8,10 @@ I am interested in the intersection of HPC, parallel computing, and AI inference
 
 ### Project Structure
 ```
-attention/ -->  Transformer Mechanics (attention, GQA, FFN)
-kv_cache/  -->  The Generation Loop (KV cache, prefill/decode)
-gemm_gemv/ -->  Compute Characteristics (GEMM vs GEMV, roofline)
+attention/             -->    Transformer Mechanics (attention, GQA, FFN)
+kv_cache/              -->    The Generation Loop (KV cache, prefill/decode)
+gemm_gemv/             -->    Compute Characteristics (GEMM vs GEMV, roofline)
+kernel_fundamentals/   -->    Kernel Fundamentals (GPU architecture, CUDA basics)
 ```
 ### Setup
 This project uses uv for fast dependency management.
