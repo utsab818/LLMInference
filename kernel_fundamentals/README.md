@@ -8,6 +8,9 @@
 ### Vector_addn
 ![alt text](../outputs/cuda_output_fundamentals.png)
 
+you can take reference of this blog to understand how it is executing.
+https://medium.com/@utsabsapkota4231/gpu-execution-model-explained-warps-sms-and-latency-hiding-f3a12550dd4d
+
 ### Launch overhead in MPS
 ![alt text](../outputs/launch_overhead_mps.png)
 
