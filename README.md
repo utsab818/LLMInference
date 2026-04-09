@@ -12,6 +12,7 @@ attention/             -->    Transformer Mechanics (attention, GQA, FFN)
 kv_cache/              -->    The Generation Loop (KV cache, prefill/decode)
 gemm_gemv/             -->    Compute Characteristics (GEMM vs GEMV, roofline)
 kernel_fundamentals/   -->    Kernel Fundamentals (GPU architecture, CUDA basics)
+kernel_optimization/   -->    Optimizations(coalescing, shared memory)
 ```
 ### Setup
 This project uses uv for fast dependency management.
