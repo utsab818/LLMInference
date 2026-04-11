@@ -5,3 +5,6 @@
 
 ### Coalescing python code in T4 Tesla.
 ![alt text](../outputs/coalescing.png)
+
+### Shared memory in T4 Tesla
+![alt text](../outputs/shared_memory.png)
