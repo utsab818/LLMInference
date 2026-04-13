@@ -8,3 +8,6 @@
 
 ### Shared memory in T4 Tesla
 ![alt text](../outputs/shared_memory.png)
+
+### Tensor cores in T4 Tesla
+![alt text](../outputs/tensor_cores.png)
