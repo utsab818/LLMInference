@@ -1,13 +1,20 @@
 # Outputs
+## Performed in colab t4 Tesla.
 
-### Coalescing cuda code in T4 Tesla.
+### Coalescing cuda code
 ![alt text](../outputs/coalescing_cuda.png)
 
-### Coalescing python code in T4 Tesla.
+### Coalescing python code
 ![alt text](../outputs/coalescing.png)
 
-### Shared memory in T4 Tesla
+### Shared memory
 ![alt text](../outputs/shared_memory.png)
 
-### Tensor cores in T4 Tesla
+### Tensor cores
 ![alt text](../outputs/tensor_cores.png)
+
+### Tiled matmul cuda
+![alt text](../outputs/tiled_matmul_cuda.png)
+
+### Triton matmul
+![alt text](../outputs/triton_matmul.png)
