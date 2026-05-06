@@ -14,6 +14,7 @@ gemm_gemv/               -->    Compute Characteristics (GEMM vs GEMV, roofline)
 kernel_fundamentals/     -->    Kernel Fundamentals (GPU architecture, CUDA basics)
 kernel_optimization/     -->    Kernel Optimization (coalescing, shared memory, Triton)
 attention_optimization/  -->    FlashAttention (online softmax, tiled attention)
+batching/                -->    Continuous Batching (Orca, radix cache, paged memory)
 ```
 ### Setup
 This project uses uv for fast dependency management.
