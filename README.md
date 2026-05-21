@@ -15,6 +15,8 @@ kernel_fundamentals/     -->    Kernel Fundamentals (GPU architecture, CUDA basi
 kernel_optimization/     -->    Kernel Optimization (coalescing, shared memory, Triton)
 attention_optimization/  -->    FlashAttention (online softmax, tiled attention)
 batching/                -->    Continuous Batching (Orca, radix cache, paged memory)
+advanced_scheduling/     -->    Advanced Scheduling (chunked prefill, CUDA graphs)
+MoE/                     -->    Mixture of Experts (MoE routing, expert caching)
 ```
 ### Setup
 This project uses uv for fast dependency management.
